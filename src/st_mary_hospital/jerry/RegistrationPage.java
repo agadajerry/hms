@@ -119,9 +119,9 @@ public class RegistrationPage extends JFrame {
 		pageBtn[7].setIcon(logout);
 		pageBtn[7].addActionListener(new ExitListener());
 
-		ImageIcon centerbgIcon = new ImageIcon(getClass().getResource("/all/images/adminpanel.png"));
-		JPanel bgPanel = new JPanel();
-		bgPanel.add(new JLabel("", centerbgIcon, JLabel.CENTER));
+//		ImageIcon centerbgIcon = new ImageIcon(getClass().getResource("/all/images/adminpanel.png"));
+//		JPanel bgPanel = new JPanel();
+//		bgPanel.add(new JLabel("", centerbgIcon, JLabel.CENTER));
 
 		centerPanel = new JPanel();
 		centerPanel.add(new RegPanel());

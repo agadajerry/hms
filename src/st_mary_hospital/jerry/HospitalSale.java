@@ -1,12 +1,16 @@
 package st_mary_hospital.jerry;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -30,9 +34,12 @@ import com.itextpdf.text.pdf.Barcode128;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.toedter.calendar.JDateChooser;
 
+import st_mary.admin.St_MaryConnection;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -49,6 +56,10 @@ import java.text.SimpleDateFormat;
 
 public class HospitalSale extends JFrame {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	public JTable table;
 	public DefaultTableModel model;
 	double qtty, qAndP, uPrice, grandTotal;
@@ -59,7 +70,7 @@ public class HospitalSale extends JFrame {
 	private JTextField[] inputField = new JTextField[4];
 	private JButton[] buttons = new JButton[4];
 	public int saleDrugId = 0;
-	private JLabel totalLabel;
+	private JLabel totalLabel, totalPaientDialy;
 	public double patientAmount = 0.0, totalPaid = 0.0;
 	private JTable inventoryTable;
 	private static DefaultTableModel invTablemodel;
@@ -71,26 +82,76 @@ public class HospitalSale extends JFrame {
 	private JButton exitB;
 	private JButton refreshB;
 	public int lastIdNo = 000001;
+	private int qttyDemanded = 0;
+	private String expireDate1 = "";
+	private String dDescribe1 = "", dDescription = "";
+	private String patientDate, patientDate2 = "";
 
 	public HospitalSale() {
 
 		setSize(new Dimension(970, 650));
-		setTitle("Hospital management system");
+		setTitle("Drug Sale Home");
 		setLocationRelativeTo(null);
-		setLayout(new BorderLayout());
+		setLayout(new BorderLayout(8, 8));
 		// setResizable(false);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		Image iconImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/all/images/add1.png"));
 		setIconImage(iconImage);
 
-		JPanel northPanel = new JPanel();
-		northPanel.setBackground(Color.GRAY);
-		ImageIcon northBgIcon = new ImageIcon(getClass().getResource("/all/images/dispensary_banna.png"));
-		JLabel northLabel = new JLabel("", northBgIcon, JLabel.CENTER);
+		// --------------------------Menu-----------------------------------------
+
+		// menu bar and items
+		JMenuBar mBar = new JMenuBar();
+		JMenu helpMenu = new JMenu("File");
+		JMenu editMenu = new JMenu("Edit");
+		helpMenu.setForeground(Color.BLACK);
+
+		//
+		mBar.add(helpMenu);
+		mBar.setPreferredSize(new Dimension(200, 30));
+		mBar.add(editMenu);
+		mBar.setBackground(new Color(0, 194, 255));
+
+		JMenuItem aboutDev = new JMenuItem("About");
+		JMenuItem cuspurchase = new JMenuItem("Patients List Of Drugs Bought");
+		JMenuItem mobthlyConsumption = new JMenuItem("Monthly Consumption Rate");
+		JMenuItem monthlyVisit = new JMenuItem("Monthly Visit");
+
+		helpMenu.add(cuspurchase);
+		helpMenu.add(mobthlyConsumption);
+		helpMenu.add(monthlyVisit);
+		helpMenu.add(aboutDev);
+		aboutDev.setMnemonic(KeyEvent.VK_A);
+		aboutDev.addActionListener(new AboutPanelPanel());
+
+		mobthlyConsumption.addActionListener(new MonthlyConsumeListener());
+		cuspurchase.addActionListener(new PatientDrugListListener());
+		monthlyVisit.addActionListener(new MonthlyVist());
+
+		setJMenuBar(mBar);
+		// --------------------------end of
+		// menu-----------------------------------------------
+
+		JPanel northPanel = new JPanel(new GridLayout(1, 2, 2, 3));
+		northPanel.setBackground(Color.WHITE);
+		ImageIcon northBgIcon = new ImageIcon(getClass().getResource("/all/images/med_drug.png"));
+
+		JLabel northLabel = new JLabel("<html><body><div>" + "<h2> PHARMACEUTICAL INVENTORY MANAGEMENT SYSTEM " + ""
+				+ "</h2><hr/><span style=color:red>DISPENSARY UNIT</span></div></body></html>");
+
+		northLabel.setFont(new Font("Aharoni", Font.BOLD, 18));
+		JLabel northIconLabel = new JLabel("Sale Unit|", northBgIcon, JLabel.CENTER);
+
+		// This panel hold display images
+		JPanel dispPanel = new JPanel();
+		dispPanel.setBackground(Color.WHITE);
+		dispPanel.add(northIconLabel);
+		northPanel.add(dispPanel);
+
 		northPanel.add(northLabel);
 		add(northPanel, BorderLayout.NORTH);
 
-		JPanel centerMainPanel = new JPanel(new GridLayout(2, 1,6,6));
+		JPanel centerMainPanel = new JPanel(new GridLayout(2, 1, 6, 6));
 		centerMainPanel.setBackground(Color.WHITE);
 
 		// table for inserted data from input field
@@ -109,8 +170,10 @@ public class HospitalSale extends JFrame {
 		// table.addMouseListener(new TextFieldGetTextListener());
 
 		//
-		String tableColumn2[] = { "S/No", "Description", "Category", "Re-Order_Lever", "UnitPrice", "BatchNo",
-				"Expiry Date,", "Inv_Date" };
+		String tableColumn2[] = { "ID", "Description", "Quantity Demanded", "Sold Quantity", "Category", "Unit Price",
+				"Expiry Date,", "Order Date", "Whom Issued" };
+		//
+
 		invTablemodel = (DefaultTableModel) inventoryTable.getModel();
 		invTablemodel.setColumnIdentifiers(tableColumn2);
 		JScrollPane scrollBar = new JScrollPane(inventoryTable);
@@ -132,7 +195,7 @@ public class HospitalSale extends JFrame {
 		searchField = new JTextField();
 		searchField.setPreferredSize(new Dimension(250, 30));
 		searchField.setFont(new Font("David", 1, 16));
-		searchField.setBorder(new LineBorder(Color.GRAY));
+		searchField.setBorder(new LineBorder(Color.BLACK));
 		searchField.addKeyListener(new ItemSearchListener());
 		JLabel searchLabel = new JLabel("Search:");
 		searchLabel.setFont(new Font("David", 1, 16));
@@ -143,13 +206,11 @@ public class HospitalSale extends JFrame {
 		refreshB.setForeground(Color.BLACK);
 		refreshB.setBackground(Color.WHITE);
 		refreshB.setFont(new Font("David", 1, 18));
-		refreshB.setBorder(new LineBorder(new Color(0,194,255)));
 		refreshB.setPreferredSize(new Dimension(200, 30));
 		refreshB.setBorder(new LineBorder(new Color(0, 194, 255), 2));
 		refreshB.addActionListener(new RefreshListener());
 		searchPanel.add(refreshB);
 
-		//
 		//
 		JPanel centerPanel1 = new JPanel(new BorderLayout());
 		centerPanel1.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -167,11 +228,10 @@ public class HospitalSale extends JFrame {
 		JPanel centerPanel2 = new JPanel(new GridLayout(6, 2, 5, 5));
 		centerPanel2.setBackground(Color.WHITE);
 		centerPanel2.setBorder(new EmptyBorder(10, 10, 10, 10));
-		JLabel dateLabel2 = new JLabel("DATE:");
+		JLabel dateLabel2 = new JLabel("Date:");
 		dateLabel2.setForeground(new Color(0, 0, 0));
 		dateLabel2.setFont(new Font("David", 1, 16));
-		dateLabel2.setBorder(new LineBorder(Color.GRAY,1));
-
+		dateLabel2.setBorder(new LineBorder(Color.GRAY, 1));
 
 		centerPanel2.add(dateLabel2);
 		//
@@ -179,16 +239,18 @@ public class HospitalSale extends JFrame {
 		chooser.setLocale(Locale.US);
 		chooser.setFont(new Font("David", 1, 16));
 		chooser.setForeground(new Color(0, 0, 0));
+		chooser.setBorder(new LineBorder(Color.BLACK, 2));
 		centerPanel2.add(chooser);
 
 		drugDescriptionField = new JTextField();
 		JLabel drugNameLabel = new JLabel();
-		drugNameLabel.setBorder(new LineBorder(Color.GRAY,1));
+		drugNameLabel.setBorder(new LineBorder(Color.GRAY, 1));
 		drugNameLabel.setText("Drug Name:");
 		drugNameLabel.setForeground(new Color(0, 0, 0));
 		drugNameLabel.setFont(new Font("David", 1, 16));
 		drugDescriptionField.setFont(new Font("David", 1, 16));
 		drugDescriptionField.setForeground(new Color(0, 0, 0));
+		drugDescriptionField.setBorder(new LineBorder(Color.BLACK, 2));
 
 		centerPanel2.add(drugNameLabel);
 		centerPanel2.add(drugDescriptionField);
@@ -201,11 +263,17 @@ public class HospitalSale extends JFrame {
 			addItemLabel[i].setForeground(new Color(0, 0, 0));
 			addItemLabel[i].setFont(new Font("David", 1, 16));
 			inputField[i].setFont(new Font("David", 1, 16));
-			inputField[i].setBorder(new LineBorder(new Color(204, 204, 204), 3));
+			inputField[i].setBorder(new LineBorder(Color.BLACK, 3));
 			addItemLabel[i].setBorder(new LineBorder(new Color(204, 204, 204), 3));
 			centerPanel2.add(addItemLabel[i]);
 			centerPanel2.add(inputField[i]);
 		}
+
+		//
+		inputField[0].addFocusListener(new LessQttyRequireListener());
+		inputField[2].addFocusListener(new CheckPatientIdListener());
+
+		inputField[1].setEnabled(false);
 
 		addItemLabel[0].setText("Quantity:");
 		addItemLabel[1].setText("Selling Price:");
@@ -227,7 +295,7 @@ public class HospitalSale extends JFrame {
 			buttons[j].setPreferredSize(new Dimension(200, 30));
 			buttons[j].setBackground(Color.WHITE);
 			buttons[j].setForeground(Color.BLACK);
-			buttons[j].setBorder(new LineBorder(new Color(0,194,255),1));
+			buttons[j].setBorder(new LineBorder(new Color(0, 194, 255), 1));
 		}
 		buttons[0].setText("Add");
 		buttons[1].setText("Save/Print");
@@ -272,15 +340,26 @@ public class HospitalSale extends JFrame {
 		tablePanel.add(scrollBar3);
 		tablePanel.setBackground(Color.WHITE);
 		tableAndFieldsPanel.add(tablePanel);
-		JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		//
+
+		JPanel southPanel = new JPanel(new GridLayout(1, 3));
+		totalPaientDialy = new JLabel();
+		totalPaientDialy.setFont(new Font("Aharoni", Font.BOLD, 30));
+		totalPaientDialy.setForeground(Color.WHITE);
+		JPanel totalPanelP = new JPanel();
+		totalPanelP.setBackground(Color.GREEN);
+		totalPanelP.add(totalPaientDialy);
+		southPanel.add(totalPanelP);
+
+		//
+		JPanel amountPanel = new JPanel();
+		amountPanel.setBackground(new Color(0, 130, 230));
 		totalLabel = new JLabel("Grand Total: ");
 		totalLabel.setFont(new Font("Aharoni", Font.BOLD, 30));
 		totalLabel.setForeground(Color.WHITE);
 		southPanel.setBackground(Color.GRAY);
-		southPanel.add(totalLabel);
-		southPanel.add(new JLabel(""));
-		southPanel.add(new JLabel(""));
-		southPanel.add(new JLabel(""));
+		amountPanel.add(totalLabel);
+		southPanel.add(amountPanel);
 
 		//
 		exitB = new JButton();
@@ -295,8 +374,18 @@ public class HospitalSale extends JFrame {
 
 		add(centerMainPanel, BorderLayout.CENTER);
 		// this.setVisible(true);
-		getAllInventoryDrugs();// drug in inventory table
+
 		lastPatientId();// last patient id
+
+		getAllInventoryDrugs();// all demanded drugs
+		// delete depeted order drugs from the table
+		// deleteDepeletedDrugs();
+		// ---------------------------------------------------------
+
+		// patient drug list table creation
+		patientDrugListDetails();
+		totalPatientDialy();
+
 	}
 
 	// exit listener class
@@ -322,12 +411,21 @@ public class HospitalSale extends JFrame {
 			JButton btn = (JButton) ev.getSource();
 			if (btn.getActionCommand().equals("Add")) {
 
+				// delete depleted order drugs from the table
+				// deleteDepeletedDrugs();
+				invTablemodel.setRowCount(0);// refresh the table
+				getAllInventoryDrugs();// refresh table
+
+				// ---------------------------------------------------------
+
 				if (inputField[0].getText().isEmpty() || inputField[0].getText().isEmpty()
 						|| inputField[1].getText().isEmpty() || inputField[2].getText().isEmpty()
 						|| inputField[3].getText().isEmpty() || drugDescriptionField.getText().toString().isEmpty()
 						|| chooser.getDate() == null) {
 					JOptionPane.showMessageDialog(null, "Some or all the text fields " + "are empty");
 				} else {
+					isPatientComeToday();// Avoid duplicate of date same patient
+
 					try {
 						totalBought = (Integer.parseInt(inputField[0].getText().trim().toString())
 								* Double.parseDouble(inputField[1].getText()));
@@ -386,19 +484,36 @@ public class HospitalSale extends JFrame {
 
 				if (table.getRowCount() != 0) {
 					totalPaid();// total Paid by customer
-
 					int choice = JOptionPane.showConfirmDialog(null,
 							"You are about to save/send the table data." + "\n Do you want to to so?");
 					if (choice == JOptionPane.YES_OPTION) {
 						// Save item bought to table in db
 						saveSaleInvoice();
+						// =------------------------------------------
+						// patientDate = "";// Reset the date holder
+
 						//
+						/*
+						 * Adding patient drugs purchase to database
+						 * 
+						 */
+						savePatientDrugSelection();
+						// -------------------------------------------------------------
+						// delete depleted order drugs
+						// deleteDepeletedDrugs();
+						getAllInventoryDrugs();// refresh table
+
+						// ----------------------------------------------
+
 						lastPatientId();// last patient id
 
 						getAllInventoryDrugs();// refresh table
 						invTablemodel.setRowCount(0);
 						getAllInventoryDrugs();// refresh table
 						model.setRowCount(0);// clear order table
+
+						// patient visited daily
+						totalPatientDialy();
 
 						int choice2 = JOptionPane.showConfirmDialog(null,
 								"Click Yes to" + " print the invoice or otherwise.");
@@ -414,13 +529,15 @@ public class HospitalSale extends JFrame {
 
 			SimpleDateFormat dFormat = new SimpleDateFormat("yyyy/MM/dd");
 			String bus_date = dFormat.format(chooser.getDate());
-			PreparedStatement ps = null, pPs = null;
+			PreparedStatement ps = null, pPs = null, psD = null;
+			;
 			String qry = "Insert into saleInvoice_Table VALUES(?,?,?,?,?,?,?)";
 			String patientInvoice = "Insert into Patient_Invoice Values (?,?,?,?,?)";
+			String updateDQtty = "Update counterdrugordertableremove set " + "sold_qtty=sold_qtty+? where order_id=?";
 
 			try {
 				for (int i = 0; i < table.getRowCount(); i++) {
-
+					int drugId = Integer.parseInt((String) table.getValueAt(i, 0));
 					String drugName = (String) table.getValueAt(i, 1);
 					int qttySold = Integer.parseInt(table.getValueAt(i, 2) + "");
 					double unitPrice = Double.parseDouble(table.getValueAt(i, 3) + "");
@@ -430,6 +547,7 @@ public class HospitalSale extends JFrame {
 					patientAmount += (unitPrice * qttySold);
 
 					ps = St_MaryConnection.getConnection().prepareStatement(qry);
+					psD = St_MaryConnection.getConnection().prepareStatement(updateDQtty);
 
 					ps.setInt(1, Integer.parseInt((String) table.getValueAt(i, 0)));
 					ps.setString(2, drugName);
@@ -438,8 +556,12 @@ public class HospitalSale extends JFrame {
 					ps.setDouble(5, totalPrice);
 					ps.setString(6, expirTime);
 					ps.setString(7, saleDate);
-
 					ps.execute();
+
+					// --------------------Update Qtty Demanded--------------------------------
+					psD.setInt(1, qttySold);
+					psD.setInt(2, drugId);
+					psD.executeUpdate();
 				}
 
 				pPs = St_MaryConnection.getConnection().prepareStatement(patientInvoice);
@@ -457,6 +579,7 @@ public class HospitalSale extends JFrame {
 
 			} catch (SQLException exc) {
 				System.out.println("Sale invoice entry error\n" + exc);
+				exc.printStackTrace();
 			}
 
 		}
@@ -475,8 +598,8 @@ public class HospitalSale extends JFrame {
 				// String []text = (String[]) table.getinventoryTableAt(row, col);
 
 				drugIdNo = (String) targetCell.getValueAt(row, 0);
-				String dDescription = (String) targetCell.getValueAt(row, 1);
-				String sellingPrice = (String) targetCell.getValueAt(row, 4);
+				dDescription = (String) targetCell.getValueAt(row, 1);
+				String sellingPrice = (String) targetCell.getValueAt(row, 5);
 				expireDate = (String) targetCell.getValueAt(row, 6);
 
 				drugDescriptionField.setText(dDescription);
@@ -524,27 +647,31 @@ public class HospitalSale extends JFrame {
 
 	private void getAllInventoryDrugs() {
 
-		String qry = "Select * From drug_inventory";
-		String dDescribe1 = "", dCat1 = "", batchNo1 = null, expireDate1 = null, invDate1 = null;
-		int reOrderQtty1 = 0;
-		int dId1 = 0;
+		String qry = "Select DISTINCT drugNameorder, category,expiryDate, orderDate, unitPrice,"
+				+ "quantityDemanded,sold_qtty,to_whom_issued, order_id From counterdrugordertableremove "
+				+ "where sold_qtty<quantityDemanded ";
+		String dCat1 = "", to_whom_issued = "", invDate1 = null;
+		int orderId = 0;
 		double unitPrice1 = 0;
 		try {
 			PreparedStatement ps = St_MaryConnection.getConnection().prepareStatement(qry);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
 
-				dDescribe1 = rs.getString("description");
+				dDescribe1 = rs.getString("drugNameorder");
 				dCat1 = rs.getString("category");
-				batchNo1 = rs.getString("batchNo");
 				expireDate1 = rs.getString("expiryDate");
-				invDate1 = rs.getString("invDate");
-				reOrderQtty1 = rs.getInt("Re_Order_Qtty");
-				dId1 = rs.getInt("inventory_id");
-				unitPrice1 = rs.getDouble("sellingPrice");
-				invTablemodel.addRow(new String[] { "" + dId1, dDescribe1, dCat1, "" + reOrderQtty1, "" + unitPrice1,
-						batchNo1, expireDate1, invDate1 });
+				invDate1 = rs.getString("orderDate");
+				unitPrice1 = rs.getDouble("unitPrice");
+				qttyDemanded = rs.getInt("quantityDemanded");
+				to_whom_issued = rs.getString("to_whom_issued");
+				orderId = rs.getInt("order_id");
+				int soldQtty = rs.getInt("sold_qtty");
+
+				invTablemodel.addRow(new String[] { "" + orderId, dDescribe1, "" + qttyDemanded, "" + soldQtty, dCat1,
+						"" + unitPrice1, expireDate1, invDate1, to_whom_issued });
 			}
+			//
 
 		} catch (SQLException ex) {
 			System.out.println("Getting all drug details from inventory errror\n");
@@ -754,6 +881,8 @@ public class HospitalSale extends JFrame {
 		public void actionPerformed(ActionEvent arg0) {
 
 			invTablemodel.setRowCount(0);
+			// delete depleted order drugs
+			// deleteDepeletedDrugs();
 			getAllInventoryDrugs();// refresh table
 
 		}
@@ -766,7 +895,7 @@ public class HospitalSale extends JFrame {
 		int inventId = 0;
 		try {
 			PreparedStatement ps = St_MaryConnection.getConnection()
-					.prepareStatement("Select idNo From" + " patient_invoice order by idNo desc limit 1");
+					.prepareStatement("Select idNo From" + " patient_invoice" + " order by idNo desc limit 1");
 
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
@@ -776,6 +905,332 @@ public class HospitalSale extends JFrame {
 			}
 		} catch (SQLException exc) {
 			System.out.println("last inventory id from table error\n" + exc);
+		}
+	}
+
+	// focus lestiner class that notify for less quantity require
+	private class LessQttyRequireListener implements FocusListener {
+
+		@Override
+		public void focusGained(FocusEvent arg0) {
+
+		}
+
+		@Override
+		public void focusLost(FocusEvent arg0) {
+
+			try {
+
+				if (Integer.parseInt(inputField[0].getText().trim()) <= 0) {
+					JOptionPane.showMessageDialog(null, "Quantity require must not less  or equal zero...");
+					inputField[0].setText("");
+
+				}
+
+				// Compare quantity, if requred q is higher than available
+				compareQuantity(drugDescriptionField.getText().toString());
+				//
+				// alertForLessQttyDemanded(inputField[0].getText(), expireDate1);
+			} catch (NumberFormatException ex) {
+				System.out.println("input text is string at demanded qtty" + " comparing to require qtty");
+			}
+
+		}
+
+	}
+
+	// delete depleted order drugs
+
+	// Quantity comparison
+
+	private void compareQuantity(String textFieldDrug) {
+
+		String qry = "Select quantityDemanded, sold_qtty From" + " counterdrugordertableremove where drugNameorder=?";
+		int qtt = 0;
+		int soldQtty = 0;
+		try {
+			PreparedStatement ps = St_MaryConnection.getConnection().prepareStatement(qry);
+
+			ps.setString(1, textFieldDrug);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+
+				qtt = rs.getInt("quantityDemanded");
+				soldQtty = rs.getInt("sold_qtty");
+
+			}
+
+			if (Integer.parseInt(inputField[0].getText().toString()) > qtt) {
+				JOptionPane.showMessageDialog(null,
+						"Required quantity is higher than available quantity\n" + "Delete the row.");
+				inputField[0].setText("");
+
+			}
+
+			if ((Integer.parseInt(inputField[0].getText().toString()) + soldQtty) > qtt) {
+				JOptionPane.showMessageDialog(null, "Sold quantity is higher than total quantity in stock...");
+
+				// model.removeRow(model.getRowCount()-1);
+				model.setRowCount(0);
+				inputField[0].setText("");
+
+			}
+			//
+
+		} catch (SQLException ex) {
+			System.out.println(ex.getMessage());
+		}
+	}
+
+	// this method create patients drug list table bought
+	private void patientDrugListDetails() {
+
+		drugOrderUPdate();// table creation
+		// -----------------------------------------------------------------------------------------------------------
+
+		String patientDrugList = "Create table if not exists patientDrugListTable (ID INT NOT NULL AUTO_INCREMENT,"
+				+ "patientId VARCHAR(45) NOT NULL" + ", drugId INT, drugNameorder VARCHAR(45) NOT NULL,"
+				+ "unitPrice double NOT NULL,totalPrice double NOT NULL," + "quantityDemanded INT NOT NULL," + ""
+				+ " expiryDate VARCHAR(45) NOT NULL, " + "orderDate VARCHAR (45) NOT NULL,PRIMARY KEY(ID))";
+
+		// --------------------------------------------------------------------------------
+		String patientMonthlyVistQry = "Create table if not exists patientMonthlyVisit1 (ID INT NOT NULL AUTO_INCREMENT"
+				+ " PRIMARY KEY," + "patientId VARCHAR(45) NOT NULL, " + "orderDate VARCHAR (45) NOT NULL)";
+
+		String patientDrug_Delete = "Create table if not exists patient_DrugDelete_Log (patientId VARCHAR(45) NOT NULL, "
+				+ "drugId INT, drugNameorder VARCHAR(45) NOT NULL,"
+				+ "unitPrice double NOT NULL,totalPrice double NOT NULL," + "quantityDemanded INT NOT NULL," + ""
+				+ " expiryDate VARCHAR(45) NOT NULL, " + "orderDate VARCHAR (45) NOT NULL)";
+
+		PreparedStatement ps = null, ps1 = null, ps2 = null;
+
+		try {
+
+			ps = St_MaryConnection.getConnection().prepareStatement(patientDrugList);
+			ps1 = St_MaryConnection.getConnection().prepareStatement(patientDrug_Delete);
+			ps2 = St_MaryConnection.getConnection().prepareStatement(patientMonthlyVistQry);
+			ps.execute();
+			ps1.execute();
+			ps2.execute();
+
+		} catch (SQLException ex) {
+			ex.printStackTrace();
+		}
+		// ------------------------------------------------------------------------
+	}
+
+	// Adding all the drugs patient wanted to pay to the patient drug list table
+	private void savePatientDrugSelection() {
+
+		PreparedStatement ps = null, ps2 = null;
+		String qry = "insert into patientdruglisttable values(null,?,?,?,?,?,?,?,?)";
+		String qry2 = "insert into patientMonthlyVisit1 values(null,?,?)";
+
+		try {
+			// ============================================================
+
+			ps2 = St_MaryConnection.getConnection().prepareStatement(qry2);
+			ps2.setString(1, inputField[2].getText());
+			ps2.setString(2, patientDate2);
+			ps2.execute();
+
+			for (int i = 0; i < table.getRowCount(); i++) {
+				int drugId = Integer.parseInt((String) table.getValueAt(i, 0));
+				String drugName = (String) table.getValueAt(i, 1);
+				int qtty = Integer.parseInt((String) table.getValueAt(i, 2));
+				double unitPrice = Double.parseDouble((String) table.getValueAt(i, 3));
+				double totalPrice = Double.parseDouble((String) table.getValueAt(i, 4));
+				String expireDate = (String) table.getValueAt(i, 5);
+				String purchaseDate = (String) table.getValueAt(i, 6);
+
+				//
+				String patientId = inputField[2].getText();
+
+				ps = St_MaryConnection.getConnection().prepareStatement(qry);
+
+				ps.setString(1, patientId);
+				ps.setInt(2, drugId);
+				ps.setString(3, drugName);
+				ps.setDouble(4, unitPrice);
+				ps.setDouble(5, totalPrice);
+				ps.setInt(6, qtty);
+				ps.setString(7, expireDate);
+				ps.setString(8, purchaseDate);
+				//// ----------------------------------------------
+
+				ps.execute();
+
+			}
+
+		} catch (SQLException exc) {
+			exc.printStackTrace();
+		}
+	}
+
+	// patient drug list dialog opener class
+	private class PatientDrugListListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+
+			PatientDrugListDialog pdld = new PatientDrugListDialog();
+			pdld.setVisible(true);
+		}
+
+	}
+
+	// create drug updated table drug trigger
+	private static void drugOrderUPdate() {
+
+		// --------------------------------------------------------
+		String patientDrugListlog = "Create table if not exists orderDrug_Update_Log "
+				+ "(id INT NOT NULL AUTO_INCREMENT,"
+				+ " drugNameorder VARCHAR(45) NOT NULL, quantityDemanded INT NOT NULL,"
+				+ "deleted_Date VARCHAR(45) NOT NULL, PRIMARY KEY(id));";
+
+		// -----------------------------------------------------------------------------------
+		try {
+			PreparedStatement ps1 = St_MaryConnection.getConnection().prepareStatement(patientDrugListlog);
+
+			ps1.execute();
+		} catch (SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	// monthly consumption table
+	private class MonthlyConsumeListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+
+			MonthlyConsumptionDialog mcd = new MonthlyConsumptionDialog();
+			mcd.setVisible(true);
+		}
+
+	}
+	// display the total number of patient that visit the hospital delay
+
+	private void totalPatientDialy() {
+
+		SimpleDateFormat dFormat = new SimpleDateFormat("yyyy/MM/dd");
+		Date nowDate = new Date();
+		String bus_date = dFormat.format(nowDate.getTime());
+		try {
+			PreparedStatement ps = St_MaryConnection.getConnection()
+					.prepareStatement("" + "SELECT COUNT(*) as total FROM `patientMonthlyVisit1` WHERE orderDate =?");
+			ps.setString(1, bus_date);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				totalPaientDialy.setText(null);
+				totalPaientDialy.setText("Total patients' today: " + rs.getString("total"));
+			}
+		} catch (SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	// About me
+	private class AboutPanelPanel implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			AboutDeveloperDialog abt = new AboutDeveloperDialog();
+			abt.setVisible(true);
+		}
+
+	}
+
+	// Select Date from patientdruglisttable using patient ID
+	private void isPatientComeToday() {
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		String pId = "";
+
+		SimpleDateFormat dFormat2 = new SimpleDateFormat("yyyy/MM/dd");
+		String bus_date2 = dFormat2.format(chooser.getDate());
+
+		String qry = " Select patientId from patientMonthlyVisit1 where patientId=? AND orderDate=?";
+		try {
+			ps = St_MaryConnection.getConnection().prepareStatement(qry);
+			ps.setString(1, inputField[2].getText().toString());
+			ps.setString(2, bus_date2);
+
+			rs = ps.executeQuery();
+			while (rs.next()) {
+
+				pId = rs.getString("patientId");
+
+			}
+
+			if (pId != "") {
+				patientDate2 = "";
+
+			} else {
+				patientDate2 = bus_date2;
+
+			}
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				if (ps != null) {
+					ps.close();
+					rs.close();
+				}
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+		}
+
+	}
+
+	// monthly visit dialog
+	private class MonthlyVist implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+
+			MonthlyVisitDialog mvd = new MonthlyVisitDialog();
+			mvd.setVisible(true);
+		}
+
+	}
+
+	// check patient id listener class
+	private class CheckPatientIdListener implements FocusListener {
+
+		@Override
+		public void focusGained(FocusEvent arg0) {
+		}
+
+		@Override
+		public void focusLost(FocusEvent arg0) {
+
+			// Check for input format of patient id
+			try {
+				String paient_IdNo = inputField[2].getText().toString().trim();
+				// 12-23-45
+				String s1 = paient_IdNo.substring(2, 3);
+				String sub2 = paient_IdNo.substring(5, 6);
+				if ((s1 + sub2).equals("--") && paient_IdNo.length() == 8) {
+					System.out.println(s1 + sub2);
+
+				} else {
+					int choice = JOptionPane.showConfirmDialog(null,
+							"Patient ID Entered is not the format\n" + "Do you want to continue ?");
+					if (choice == JOptionPane.YES_OPTION) {
+						inputField[2].getText().toString().trim();
+					}
+
+				}
+
+			} catch (Exception ex) {
+				System.out.println("Patient ID format check");
+			}
+
 		}
 	}
 }

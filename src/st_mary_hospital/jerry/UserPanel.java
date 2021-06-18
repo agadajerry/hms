@@ -16,12 +16,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -38,6 +42,8 @@ public class UserPanel extends JDialog {
 	private static DefaultTableModel model;
 	private JTextField searchField;
 	private TableRowSorter<DefaultTableModel> sorter;
+	private JComboBox<String> userBox;
+	private DefaultComboBoxModel<String> cModel;
 
 	public UserPanel() {
 
@@ -96,16 +102,25 @@ public class UserPanel extends JDialog {
 			userBtn[i].addActionListener(new UserBtnListener());
 		}
 
-		userBtn[0].setBounds(100, 157, 170, 30);
-		userBtn[1].setBounds(280, 157, 170, 30);
-		userBtn[2].setBounds(460, 157, 170, 30);
+		userBtn[0].setBounds(100, 190, 170, 30);
+		userBtn[1].setBounds(280, 190, 170, 30);
+		userBtn[2].setBounds(460, 190, 170, 30);
 
 		userBtn[0].setText("Add New User");
 		userBtn[1].setText("Modify");
 		userBtn[2].setText("Delete");
+		
+		//Select combo box b either admin or users
+		String userArrsy[] = {"Admin","Cashier","Pharmacy","Receptionist"};
+		cModel = new DefaultComboBoxModel<>(userArrsy);
+		userBox = new JComboBox<>(cModel);
+		userBox.setFont(new Font("David", Font.BOLD, 14));
+		userBox.setBounds(250, 150, 200, 25);
+		centerPanel.add(userBox);
+		
 		add(centerPanel, BorderLayout.CENTER);
 
-		String[] columnName = { "ID", "UserName", "Password" };
+		String[] columnName = { "ID", "UserName", "Position","Password" };
 		table = new JTable();
 		table.getTableHeader().setFont(new Font("David", Font.BOLD, 14));
 		table.getTableHeader().setBackground(new Color(0, 194, 255));
@@ -185,8 +200,7 @@ public class UserPanel extends JDialog {
 			//
 			if (btn.getActionCommand().equals("Delete")) {
 
-				if (userField[0].getText().isEmpty() || userField[1].getText().isEmpty()
-						|| userField[2].getText().isEmpty()) {
+				if (userField[0].getText().isEmpty() || userField[1].getText().isEmpty()) {
 
 					JOptionPane.showMessageDialog(null,
 							"One or all Texfields are empty\n" + "Click on the table row you want to delete.");
@@ -213,11 +227,12 @@ public class UserPanel extends JDialog {
 		// --------------------------------------------------------------------
 		try {
 			PreparedStatement ps = St_MaryConnection.getConnection()
-					.prepareStatement("" + "Update user_table set userName=?, password=? where u_id=?");
+					.prepareStatement("" + "Update user_table set userName=?, password=?,position=? where u_id=?");
 
 			ps.setString(1, userField[1].getText());
 			ps.setString(2, hasedPassword);
-			ps.setInt(3, Integer.parseInt(userField[0].getText()));
+			ps.setString(3, userBox.getSelectedItem().toString());
+			ps.setInt(4, Integer.parseInt(userField[0].getText()));
 			int suces = ps.executeUpdate();
 			if (suces > 0) {
 				JOptionPane.showMessageDialog(null, "Data is modified successfully...");
@@ -252,13 +267,14 @@ public class UserPanel extends JDialog {
 		String hasedPassword = generateHashKey(saltedPassword);
 		// --------------------------------------------------------------------
 
-		String sql = "insert into user_table (u_id, userName, password) VALUES (?, ?, ?)";
+		String sql = "insert into user_table (u_id, userName,position, password) VALUES (?, ?, ?,?)";
 		try {
 			ps = St_MaryConnection.getConnection().prepareStatement(sql);
 
 			ps.setString(1, userField[0].getText().toLowerCase());
 			ps.setString(2, userField[1].getText().toString().trim().toLowerCase());
-			ps.setString(3, hasedPassword);
+			ps.setString(3, userBox.getSelectedItem().toString());
+			ps.setString(4, hasedPassword);
 
 			ps.execute();
 			JOptionPane.showMessageDialog(null, "Data saved successfully...", "Message",
@@ -271,7 +287,8 @@ public class UserPanel extends JDialog {
 			// call last row method here
 			lastStaffId();
 		} catch (SQLException exc) {
-
+			
+			exc.printStackTrace();
 			JOptionPane.showMessageDialog(null,
 
 					"UserName enter: " + userField[1].getText() + " Already Taken. You can only modify or delete it\n"
@@ -342,7 +359,8 @@ public class UserPanel extends JDialog {
 				String userName = rs.getString("userName");
 				String passw = rs.getString("password");
 				int u_id = rs.getInt("u_id");
-				model.addRow(new String[] { "" + u_id, userName, passw });
+				String positionHeld = rs.getString("position");
+				model.addRow(new String[] { "" + u_id, userName,positionHeld, passw });
 			}
 		} catch (SQLException ex) {
 			System.out.println("Error for getting login info and set on table\n" + ex);

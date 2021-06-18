@@ -18,7 +18,7 @@ public class AboutDeveloperDialog extends JDialog {
 
 	public AboutDeveloperDialog() {
 
-		setSize(new Dimension(581, 632));
+		setSize(new Dimension(390, 660));
 		setTitle("About Dev");
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -30,13 +30,13 @@ public class AboutDeveloperDialog extends JDialog {
 		setModal(true);
 		setResizable(false);
 		
-		ImageIcon meIcon = new ImageIcon(getClass().getResource("/all/images/aboutme.png"));
+		ImageIcon meIcon = new ImageIcon(getClass().getResource("/all/images/aboutme.PNG"));
 
 		JLabel imageLabel = new JLabel("", meIcon, JLabel.CENTER);
 
 		JPanel centerPanel = new JPanel();
 		centerPanel.add(imageLabel);
-		centerPanel.setBounds(0, 0, 581, 632);
+		centerPanel.setBounds(0, 0, 382, 600);
 		
 		add(centerPanel,BorderLayout.CENTER);
 

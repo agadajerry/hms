@@ -30,6 +30,10 @@ import javax.swing.table.TableRowSorter;
 
 public class DrugSlectionTable extends JDialog {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JTextField searchField;
 	private DefaultTableCellRenderer cellRenderer;
 	private TableRowSorter<DefaultTableModel> sorter;

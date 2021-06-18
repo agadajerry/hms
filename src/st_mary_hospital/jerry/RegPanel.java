@@ -54,7 +54,7 @@ public class RegPanel extends JPanel {
 	private JDateChooser regDate;
 	private JComboBox<String> sexBox;
 	private JTextField teleField, ageField;
-	private JButton[] actionBtn = new JButton[4];
+	private JButton[] actionBtn = new JButton[5];
 	private JTextField idField, searchField;
 	private TableRowSorter<DefaultTableModel> sorter;
 
@@ -194,7 +194,7 @@ public class RegPanel extends JPanel {
 		// search field for a patient
 		searchField = new JTextField();
 		searchField.setFont(new Font("David", 1, 16));
-		searchField.setPreferredSize(new Dimension(200, 30));
+		searchField.setPreferredSize(new Dimension(140, 30));
 		searchField.addKeyListener(new SearchListener());
 		// label for search field
 		JLabel sechLabel = new JLabel("Search");
@@ -210,16 +210,17 @@ public class RegPanel extends JPanel {
 			actionBtn[j].setBackground(Color.WHITE);
 			actionBtn[j].setFont(new Font("David", 1, 18));
 			actionBtn[j].setBorder(new LineBorder(new Color(0, 194, 255), 1));
-			actionBtn[j].setPreferredSize(new Dimension(200, 30));
+			actionBtn[j].setPreferredSize(new Dimension(180, 30));
 			actionBtn[j].addActionListener(new ButtonOperationListener());
 			lastRightPanel.add(actionBtn[j]);
 
 		}
 
-		actionBtn[0].setText("Save");
-		actionBtn[1].setText("Update");
-		actionBtn[2].setText("Delete Record");
-		actionBtn[3].setText("Search Patient");
+		actionBtn[0].setText("Filter");
+		actionBtn[1].setText("Save");
+		actionBtn[2].setText("Update");
+		actionBtn[3].setText("Delete Record");
+		actionBtn[4].setText("Search Patient");
 
 		add(centerPanel, BorderLayout.CENTER);
 		JPanel westPanel = new JPanel();
@@ -253,39 +254,35 @@ public class RegPanel extends JPanel {
 		southPanel.add(tableScroll, BorderLayout.CENTER);
 		add(southPanel, BorderLayout.SOUTH);
 
-		patient_Data_Selection();// getting all patient id from table and set it on combo box
+		patient_Data_Selection();// getting all patient id from table and set it on
+		// combo box
 
 	}
 
-	// sorter focus listener class
-	private void sorterProduct(String qry) {
-		sorter = new TableRowSorter<DefaultTableModel>(model);
-		table.setRowSorter(sorter);
-		sorter.setRowFilter(RowFilter.regexFilter(qry));
-	}
+//	// sorter focus listener class
+//	private void sorterProduct(String qry) {
+//		sorter = new TableRowSorter<DefaultTableModel>(model);
+//		table.setRowSorter(sorter);
+//		sorter.setRowFilter(RowFilter.regexFilter(qry));
+//	}
 
 	// search listener class
 	private class SearchListener implements KeyListener {
 
 		@Override
-		public void keyPressed(KeyEvent arg0) {
-			// TODO Auto-generated method stub
-
-		}
+		public void keyPressed(KeyEvent arg0) {}
 
 		@Override
 		public void keyReleased(KeyEvent arg0) {
-			sorterProduct(searchField.getText().toString().toUpperCase());
-
+		//sorterProduct(searchField.getText().toString().toUpperCase());
+		fetchPatient();
 		}
 
 		@Override
-		public void keyTyped(KeyEvent arg0) {
-			// TODO Auto-generated method stub
-
-		}
-
+		public void keyTyped(KeyEvent arg0) {}
 	}
+
+	
 
 	// Setting back the patient data for update
 	private class MouseSelectionListener implements MouseListener {
@@ -310,28 +307,16 @@ public class RegPanel extends JPanel {
 		}
 
 		@Override
-		public void mouseEntered(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-
-		}
+		public void mouseEntered(MouseEvent arg0) {}
 
 		@Override
-		public void mouseExited(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-
-		}
+		public void mouseExited(MouseEvent arg0) {}
 
 		@Override
-		public void mousePressed(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-
-		}
+		public void mousePressed(MouseEvent arg0) {}
 
 		@Override
-		public void mouseReleased(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-
-		}
+		public void mouseReleased(MouseEvent arg0) {}
 
 	}
 
@@ -358,6 +343,12 @@ public class RegPanel extends JPanel {
 				// refresh the age display bar by the left
 				RegistrationPage.setAgeOnButtons();// call this method for refreshing age bar---
 
+			}
+			
+			if (btn.getActionCommand().equals("Filter")) {
+				// Refresh the table in combo box and the table
+				model.setRowCount(0);
+				fetchPatient();
 			}
 			if (btn.getActionCommand().equals("Save")) {
 
@@ -518,6 +509,43 @@ public class RegPanel extends JPanel {
 			}
 		} catch (SQLException ex) {
 			System.out.println("Selecting all patient id from it table error");
+		}
+	}
+	
+//	Filter patient name
+	private void fetchPatient() {
+
+		/*
+		 * this method handle patient data selection from db and set on table
+		 */
+		String inputQuery = searchField.getText().toString().toUpperCase();
+		String splitS = inputQuery.replaceAll("\\s+", "");
+		
+		try {
+			PreparedStatement ps = St_MaryConnection.getConnection()
+					.prepareStatement("Select *  From patient_register WHERE "
+							+ "CONCAT(surname, other_name, occupation, address, phone_no) LIKE ?");
+			
+			ps.setString(1, "%"+splitS+"%");
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				String p_Id = rs.getString("patient_id");
+				String surName = rs.getString("surname");
+				String otherName = rs.getString("other_name");
+				String occupation = rs.getString("occupation");
+				int age = rs.getInt("age");
+				String gender = rs.getString("gender");
+				String phone = rs.getString("phone_no");
+				String address = rs.getString("address");
+				String regDate = rs.getString("reg_date");
+
+				model.addRow(new String[] { p_Id, surName, otherName, occupation, "" + age, gender, phone, address,
+						regDate });
+
+			}
+		} catch (SQLException ex) {
+			System.out.println("Selecting all patient id from it table error 2");
+			ex.printStackTrace();
 		}
 	}
 }

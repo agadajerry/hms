@@ -12,6 +12,8 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -21,11 +23,17 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
 public class InnerStoreHome extends JFrame {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JButton[] actionBtn = new JButton[7];
+	private JPanel[] sidePanel = new JPanel[7];
 	private JPanel centerPanel;
 	private CardLayout cLayout;
 	private JButton logOutB;
@@ -34,7 +42,7 @@ public class InnerStoreHome extends JFrame {
 
 		setSize(new Dimension(1200, 800));
 		setLocationRelativeTo(null);
-		setLayout(new BorderLayout(8,9));
+		setLayout(new BorderLayout(8, 9));
 		// setBackground(Color.WHITE);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		Image iconImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/all/images/add1.png"));
@@ -48,7 +56,7 @@ public class InnerStoreHome extends JFrame {
 		// menu bar and items
 		JMenuBar mBar = new JMenuBar();
 		JMenu helpMenu = new JMenu("HELP");
-		helpMenu.setForeground(Color.WHITE);
+		helpMenu.setForeground(Color.BLACK);
 
 		//
 		mBar.add(helpMenu);
@@ -76,28 +84,30 @@ public class InnerStoreHome extends JFrame {
 
 		// WestPanel holding order Table,displaying all drugs table,
 
-		JPanel westPanel = new JPanel(new GridLayout(2, 1));
-		JPanel westPanel1 = new JPanel(new GridLayout(7, 1));
-		JPanel westPanel2 = new JPanel();// dummy panel
+		JPanel westPanel1 = new JPanel(new GridLayout(7, 1, 5, 5));
 		westPanel1.setBackground(Color.GRAY);
-		westPanel2.setBackground(Color.GRAY);
-		westPanel.add(westPanel1);
-		westPanel.add(westPanel2);
+
 		// adding components to panel one
 
 		for (int j = 0; j < actionBtn.length; j++) {
 			actionBtn[j] = new JButton();
-			actionBtn[j] = new JButton();
+			sidePanel[j] = new JPanel();
 			actionBtn[j].setForeground(Color.BLACK);
 			actionBtn[j].setBackground(Color.WHITE);
 			actionBtn[j].setFont(new Font("David", 1, 18));
-			actionBtn[j].setBorder(new LineBorder(new Color(0,194,255)));
-			actionBtn[j].setPreferredSize(new Dimension(230, 30));
+			actionBtn[j].setBorder(new LineBorder(new Color(0, 194, 255)));
+			actionBtn[j].setPreferredSize(new Dimension(230, 60));
 			actionBtn[j].addActionListener(new DrugRecordListener());
-			westPanel1.add(actionBtn[j]);
+			//
+			sidePanel[j].setPreferredSize(new Dimension(230, 70));
+			sidePanel[j].setBackground(Color.PINK);
+			sidePanel[j].setBorder(new EmptyBorder(10, 10, 10, 10));
+			sidePanel[j].add(actionBtn[j]);
+			sidePanel[j].setBackground(Color.WHITE);
+			westPanel1.add(sidePanel[j]);
 			// setBackground(new Color(0, 194, 255));
 		}
-		actionBtn[0].setText("HOME");
+		actionBtn[0].setText("MONTHLY DRUG ORDER");
 		actionBtn[1].setText("DRUGS' RECORD");
 		actionBtn[2].setText("INVENTORY");
 		actionBtn[3].setText("ORDER DRUGS");
@@ -105,23 +115,28 @@ public class InnerStoreHome extends JFrame {
 		actionBtn[5].setText("DRUG STATUS");
 		actionBtn[6].setText("EXPIRED DRUGS");
 		//
-		// adding image to west panel
-		ImageIcon westPanelIcon = new ImageIcon(getClass().getResource("/all/images/pharmacy_icon.png"));
-		JLabel westLabel = new JLabel("", westPanelIcon, JLabel.CENTER);
+		actionBtn[0].setToolTipText("Monthly Consumption and patient monthly visit");
+		actionBtn[1].setToolTipText("Add or view drug records");
+		actionBtn[2].setToolTipText("Inventory records");
+		actionBtn[3].setToolTipText("Order drugs operation");
+		actionBtn[4].setToolTipText("Tally or Bin card generation");
+		actionBtn[5].setToolTipText("Amount of drugs entered and days of expiration");
+		actionBtn[6].setToolTipText("List of expired drugs");
 
-		westPanel2.add(westLabel);
-		add(westPanel, BorderLayout.WEST);
+		//
+
+		add(westPanel1, BorderLayout.WEST);
 
 		//
 		centerPanel = new JPanel();
 
 		cLayout = new CardLayout();
 		centerPanel.setLayout(cLayout);
-		centerPanel.add(new HomeImage(), "home");
+		centerPanel.add(new MonthlyDrugDisplayPanel(), "Monthly Consumption");
 		centerPanel.add(new InnerDrugStore(), "innerStore");
 		centerPanel.add(new DrugTallyPanel(), "drugList");
 		centerPanel.add(new DrugListStatus(), "drugStatus");
-		//centerPanel.add(new ExpiredDrugPanel(), "expiry");
+		// centerPanel.add(new ExpiredDrugPanel(), "expiry");
 
 		add(centerPanel, BorderLayout.CENTER);
 
@@ -134,9 +149,13 @@ public class InnerStoreHome extends JFrame {
 		ImageIcon logOutIcon = new ImageIcon(getClass().getResource("/all/images/logout.png"));
 
 		logOutB = new JButton("", logOutIcon);
-
+		logOutB.setToolTipText("Log out");
+		JLabel myName = new JLabel("Designed By: JerrySoft Inc.");
+		myName.setFont(new Font("Forte", 1, 18));
+		myName.setForeground(Color.BLACK);
 		logOutB.setPreferredSize(new Dimension(30, 30));
 		logOutB.addActionListener(new LogoutListener());
+		southPanel.add(myName);
 		southPanel.add(logOutB);
 		add(southPanel, BorderLayout.SOUTH);
 		// visibility of frame
@@ -172,8 +191,8 @@ public class InnerStoreHome extends JFrame {
 
 			}
 
-			if (btn.getActionCommand().equals("HOME")) {
-				cLayout.show(centerPanel, "home");
+			if (btn.getActionCommand().equals("MONTHLY DRUG ORDER")) {
+				cLayout.show(centerPanel, "Monthly Consumption");
 			}
 			if (btn.getActionCommand().equals("INVENTORY")) {
 				InventoryDrugDialog idialog = new InventoryDrugDialog(null, null, null, null, null);
@@ -223,4 +242,5 @@ public class InnerStoreHome extends JFrame {
 		}
 
 	}
+
 }

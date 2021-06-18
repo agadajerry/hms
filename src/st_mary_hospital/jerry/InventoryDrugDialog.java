@@ -8,8 +8,6 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -43,6 +41,10 @@ import com.toedter.calendar.JDateChooser;
 
 public class InventoryDrugDialog extends JDialog {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JLabel[] addItemLabel = new JLabel[2];
 	private JTextField[] inputField = new JTextField[2];
 	private JTable table;
@@ -126,7 +128,7 @@ public class InventoryDrugDialog extends JDialog {
 		descriptionField = new JTextField(dDescription);
 		JLabel describLabel = new JLabel("Description:");
 		describLabel.setFont(new Font("David", 1, 16));
-		descriptionField.setBorder(new LineBorder(Color.GRAY, 2));
+		descriptionField.setBorder(new LineBorder(Color.BLACK, 2));
 		describLabel.setBorder(new LineBorder(Color.GRAY, 2));
 		descriptionField.setFont(new Font("David", 1, 16));
 		centerPanel.add(describLabel);
@@ -136,7 +138,7 @@ public class InventoryDrugDialog extends JDialog {
 		classField = new JTextField(dClass);
 		JLabel classLabel = new JLabel("Class:");
 		classLabel.setFont(new Font("David", 1, 16));
-		classField.setBorder(new LineBorder(Color.GRAY, 2));
+		classField.setBorder(new LineBorder(Color.BLACK, 2));
 		classLabel.setBorder(new LineBorder(Color.GRAY, 2));
 		classField.setFont(new Font("David", 1, 16));
 		classField.setEditable(false);
@@ -151,7 +153,7 @@ public class InventoryDrugDialog extends JDialog {
 			addItemLabel[i].setFont(new Font("David", 1, 14));
 			addItemLabel[i].setBorder(new LineBorder(Color.GRAY, 2));
 			inputField[i].setFont(new Font("David", 1, 16));
-			inputField[i].setBorder(new LineBorder(Color.GRAY, 2));
+			inputField[i].setBorder(new LineBorder(Color.BLACK, 2));
 			centerPanel.add(addItemLabel[i]);
 			centerPanel.add(inputField[i]);
 		}
@@ -169,7 +171,7 @@ public class InventoryDrugDialog extends JDialog {
 		supplierBox = new JComboBox<String>(supplierModel);
 		supplierBox.setEditable(true);
 		supplierBox.setFont(new Font("David", 1, 16));
-		supplierBox.setBorder(new LineBorder(Color.GRAY, 2));
+		supplierBox.setBorder(new LineBorder(Color.BLACK, 2));
 		AutoCompleteDecorator.decorate(supplierBox);
 		centerPanel.add(supplierBox);
 		//
@@ -177,7 +179,7 @@ public class InventoryDrugDialog extends JDialog {
 		//
 		expireDateChoser = new JDateChooser();
 		expireDateChoser.setLocale(Locale.US);
-		expireDateChoser.setBorder(new LineBorder(Color.GRAY, 2));
+		expireDateChoser.setBorder(new LineBorder(Color.BLACK, 2));
 		JLabel expireLabel = new JLabel("Expiry Date");
 		expireLabel.setBorder(new LineBorder(Color.GRAY, 2));
 		expireLabel.setFont(new Font("David", 1, 16));
@@ -191,7 +193,7 @@ public class InventoryDrugDialog extends JDialog {
 		qttyLabel.setFont(new Font("David", 1, 13));
 		qttyField = new JTextField();
 		qttyField.setFont(new Font("David", 1, 14));
-		qttyField.setBorder(new LineBorder(Color.GRAY, 2));
+		qttyField.setBorder(new LineBorder(Color.BLACK, 2));
 		qttyLabel.setBorder(new LineBorder(Color.GRAY, 2));
 		operationPanel.add(qttyLabel);
 		operationPanel.add(qttyField);
@@ -202,7 +204,7 @@ public class InventoryDrugDialog extends JDialog {
 						+ "(Notify Me At this Level)</p>" + "</html>");
 
 		alertField.setFont(new Font("David", 1, 14));
-		alertField.setBorder(new LineBorder(Color.GRAY, 2));
+		alertField.setBorder(new LineBorder(Color.BLACK, 2));
 		alertLabel.setBorder(new LineBorder(Color.GRAY, 2));
 		operationPanel.add(alertLabel);
 		operationPanel.add(alertField);
@@ -214,7 +216,7 @@ public class InventoryDrugDialog extends JDialog {
 		unitField = new JTextField();
 		unitField.setLocale(Locale.US);
 		unitField.setFont(new Font("David", 1, 14));
-		unitField.setBorder(new LineBorder(Color.GRAY, 2));
+		unitField.setBorder(new LineBorder(Color.BLACK, 2));
 		unitLabel.setBorder(new LineBorder(Color.GRAY, 2));
 		operationPanel.add(unitLabel);
 		operationPanel.add(unitField);
@@ -223,7 +225,7 @@ public class InventoryDrugDialog extends JDialog {
 
 		invDate = new JDateChooser();
 		invDate.setLocale(Locale.UK);
-
+		invDate.setBorder(new LineBorder(Color.BLACK, 2));
 		JLabel dateLabel = new JLabel("Inventory Date");
 		dateLabel.setBorder(new LineBorder(Color.GRAY, 2));
 
@@ -246,7 +248,7 @@ public class InventoryDrugDialog extends JDialog {
 		searchField = new JTextField();
 		searchField.setPreferredSize(new Dimension(250, 30));
 		searchField.setFont(new Font("David", 1, 16));
-		searchField.setBorder(new LineBorder(Color.GRAY));
+		searchField.setBorder(new LineBorder(Color.BLACK));
 		searchField.addKeyListener(new ItemSearchListener());
 		JLabel searchLabel = new JLabel("Search:");
 		searchLabel.setFont(new Font("David", 1, 16));
@@ -328,7 +330,7 @@ public class InventoryDrugDialog extends JDialog {
 		refreshB = new JButton("Refresh");
 		refreshB.setForeground(Color.BLACK);
 		refreshB.setBackground(Color.WHITE);
-		refreshB.setBorder(new LineBorder(new Color(0,194,255), 1));
+		refreshB.setBorder(new LineBorder(new Color(0, 194, 255), 1));
 		refreshB.setFont(new Font("David", 1, 14));
 
 		refreshB.setPreferredSize(new Dimension(200, 30));
@@ -338,6 +340,8 @@ public class InventoryDrugDialog extends JDialog {
 		add(southPanel, BorderLayout.SOUTH);
 		lastInventoryId();// last inventory id
 		getAllInventoryDrugs();// all stored inventory details
+		suppliersName();//suppliers
+
 	}
 
 	// adding drugs and it expiring date to database
@@ -446,7 +450,8 @@ public class InventoryDrugDialog extends JDialog {
 	private void getAllInventoryDrugs() {
 
 		String qry = "Select * From drug_inventory";
-		String dDescribe1 = "", dCat1 = "", dClass1 = "", batchNo1 = null, voucherNo1 = null, supplier1 = null,
+		String dDescribe1 = "", dCat1 = "", dClass1 = "", 
+				batchNo1 = null, voucherNo1 = null, supplier1 = null,
 				expireDate1 = null, invDate1 = null;
 		int orderQtty1 = 0, unitPrice1 = 0, reOrderQtty1 = 0;
 		int dId1 = 0;
@@ -470,8 +475,7 @@ public class InventoryDrugDialog extends JDialog {
 				model.addRow(new String[] { "" + dId1, dDescribe1, dClass1, dCat1, "" + orderQtty1, "" + reOrderQtty1,
 						"" + unitPrice1, batchNo1, voucherNo1, supplier1, expireDate1, invDate1 });
 
-				// set suppliers to it combo box
-				supplierModel.addElement(supplier1);
+								
 			}
 
 			// clear field on each table entry
@@ -484,6 +488,25 @@ public class InventoryDrugDialog extends JDialog {
 
 		} catch (SQLException ex) {
 			System.out.println("Getting all drug details errror\n" + ex);
+		}
+	}
+
+	// select distinct supplier
+	// who issued
+	private void suppliersName() {
+		String supplier1 = null;
+		//
+		try {
+			PreparedStatement ps = St_MaryConnection.getConnection()
+					.prepareStatement("" + "Select DISTINCT supplier From drug_inventory");
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				supplier1 = rs.getString("supplier");
+				// set suppliers to it combo box
+				supplierModel.addElement(supplier1);
+			}
+		} catch (SQLException ex) {
+			System.out.println("Error getting suppliers on combo box" + ex);
 		}
 	}
 
@@ -564,14 +587,23 @@ public class InventoryDrugDialog extends JDialog {
 								+ "old.Re_order_Qtty,old.expiryDate,old.invDate); " + "END;";
 
 						PreparedStatement ps1 = St_MaryConnection.getConnection().prepareStatement(triggerQry);
+						ps1.executeUpdate();
 						//
 						PreparedStatement ps = St_MaryConnection.getConnection()
 								.prepareStatement("Delete  from drug_inventory where inventory_id=?");
 						ps.setInt(1, Integer.parseInt(drugIdField.getText().toString()));
 						ps.executeUpdate();
+						// --------------------------------------------------------------------------------
+						PreparedStatement ps2 = St_MaryConnection.getConnection()
+								.prepareStatement("Delete  from counterdrugordertableRemove where order_id=?");
+						ps2.setInt(1, Integer.parseInt(drugIdField.getText().toString()));
+						ps2.executeUpdate();
 						//
-						// after successful deletion of drug from inventory, execute this trigger
-						ps1.executeUpdate();
+
+						PreparedStatement ps3 = St_MaryConnection.getConnection()
+								.prepareStatement("Delete  from counterdrugordertable where order_id=?");
+						ps3.setInt(1, Integer.parseInt(drugIdField.getText().toString()));
+						ps3.executeUpdate();
 						//
 						// all stored inventory details
 						model.setRowCount(0);

@@ -18,6 +18,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 
 import javax.swing.DefaultComboBoxModel;
@@ -66,6 +67,8 @@ public class DrugOrderDialog extends JDialog {
 	private TableColumn tColumn;
 	private JComboBox<String> receiverBox, issuerBox;
 	private DefaultComboBoxModel<String> recevaModel, issuaModel;
+	private String drugN = "";
+	private int qty = 0;
 
 	public DrugOrderDialog() {
 
@@ -99,6 +102,7 @@ public class DrugOrderDialog extends JDialog {
 
 		invDate = new JDateChooser();
 		invDate.setLocale(Locale.UK);
+		invDate.setBorder(new LineBorder(Color.BLACK, 2));
 
 		JLabel dateLabel = new JLabel("Date:");
 		dateLabel.setBorder(new LineBorder(Color.GRAY, 2));
@@ -111,7 +115,7 @@ public class DrugOrderDialog extends JDialog {
 		drugLabel = new JLabel("Drug/Description:");
 		drugLabel.setBorder(new LineBorder(Color.GRAY, 2));
 		drugLabel.setFont(new Font("David", 1, 16));
-		drugDescriptionField.setBorder(new LineBorder(Color.GRAY, 1));
+		drugDescriptionField.setBorder(new LineBorder(Color.BLACK, 1));
 		drugDescriptionField.setEditable(false);
 		centerPanel.add(drugLabel);
 		centerPanel.add(drugDescriptionField);
@@ -124,7 +128,7 @@ public class DrugOrderDialog extends JDialog {
 			addItemLabel[i].setForeground(new Color(0, 0, 0));
 			addItemLabel[i].setFont(new Font("David", 1, 14));
 			inputField[i].setFont(new Font("David", 1, 16));
-			inputField[i].setBorder(new LineBorder(Color.GRAY, 2));
+			inputField[i].setBorder(new LineBorder(Color.BLACK, 2));
 			addItemLabel[i].setBorder(new LineBorder(Color.GRAY, 2));
 			centerPanel.add(addItemLabel[i]);
 			centerPanel.add(inputField[i]);
@@ -151,10 +155,10 @@ public class DrugOrderDialog extends JDialog {
 		issuerBox.setEditable(true);
 		AutoCompleteDecorator.decorate(issuerBox);
 		receiverBox.setFont(new Font("David", 1, 16));
-		receiverBox.setBorder(new LineBorder(new Color(204, 204, 204), 3));
+		receiverBox.setBorder(new LineBorder(Color.BLACK, 2));
 		//
 		issuerBox.setFont(new Font("David", 1, 16));
-		issuerBox.setBorder(new LineBorder(new Color(204, 204, 204), 3));
+		issuerBox.setBorder(new LineBorder(Color.BLACK, 2));
 		JLabel recevaLabel = new JLabel("From Who Received:");
 		JLabel IssuaLabel = new JLabel(" To Whom Issued:");
 		recevaLabel.setBorder(new LineBorder(Color.GRAY, 2));
@@ -273,7 +277,7 @@ public class DrugOrderDialog extends JDialog {
 		searchField = new JTextField();
 		searchField.setPreferredSize(new Dimension(250, 30));
 		searchField.setFont(new Font("David", 1, 16));
-		searchField.setBorder(new LineBorder(Color.GRAY));
+		searchField.setBorder(new LineBorder(Color.BLACK));
 		searchField.addKeyListener(new ItemSearchListener());
 		JLabel searchLabel = new JLabel("Search:");
 		searchLabel.setFont(new Font("David", 1, 16));
@@ -319,6 +323,7 @@ public class DrugOrderDialog extends JDialog {
 						|| invDate.getDate() == null) {
 					JOptionPane.showMessageDialog(null,
 							"Some or all the input fields are empty\n" + "Enter appropriate information.");
+					
 				} else {
 
 					SimpleDateFormat dFormat = new SimpleDateFormat("yyyy/MM/dd");
@@ -328,12 +333,16 @@ public class DrugOrderDialog extends JDialog {
 							issuerBox.getSelectedItem().toString(), expireDate, bus_date
 
 					});
+					
+					avoidHighQttFromLowDrug();
+					//model.setRowCount(0);//Clear tablef
+					//
 					inputField[0].setText(null);
 					inputField[1].setText(null);
 					drugDescriptionField.setText(null);
 
 				}
-			} // if 1
+			} // 
 
 			if (btn.getActionCommand().equals("Save/Send")) {
 
@@ -347,12 +356,11 @@ public class DrugOrderDialog extends JDialog {
 						invTablemodel.setRowCount(0);
 						getAllInventoryDrugs();// refresh table
 						model.setRowCount(0);// clear order table
-						
-						//
-						issuaModel.removeAllElements();//mpty the combo box first
-						recevaModel.removeAllElements();//empty the combo box first
-						who_to_Reciever();// to whom recieved and issue method here
 
+						//
+						issuaModel.removeAllElements();// mpty the combo box first
+						recevaModel.removeAllElements();// empty the combo box first
+						who_to_Reciever();// to whom recieved and issue method here
 
 					}
 				}
@@ -381,17 +389,23 @@ public class DrugOrderDialog extends JDialog {
 
 	private void saveCounterOrderInfo() {
 
-		PreparedStatement ps = null, pre = null;
-		String insertQry = "Insert into counterDrugOrderTable VALUES (?,?,?,?,?,?,?,?,?)";
-		String updateQry = "Update drug_inventory SET quantity= quantity-? where description=?";
-
+		int soldQtty=0;
+		PreparedStatement ps = null, pre = null,ps2=null;
+		String insertQry = "Insert into counterDrugOrderTable VALUES (?,?,?,?,?,?,?,?,?,?)";
+		String insertQryRemove = "Insert into counterDrugOrderTableRemove"
+				+ " VALUES (?,?,?,?,?,?,?,?,?,?)";
+		String updateQry = "Update drug_inventory SET quantity= quantity-? "
+				+ "where description=? AND inventory_id=?"
+				+ " ";
+		
+		//counterDrugOrderTableRemove
 		try {
 			for (int i = 0; i < table.getRowCount(); i++) {
 				int drugOrderId = Integer.parseInt((String) table.getValueAt(i, 0));
 				String drugName = (String) table.getValueAt(i, 1);
 				String drugCateg = (String) table.getValueAt(i, 2);
 				double unitPrice = Double.parseDouble(table.getValueAt(i, 3) + "");
-				int qttyIssued = Integer.parseInt(table.getValueAt(i, 4) + "");
+				int qttyIssued = Integer.parseInt((String) table.getValueAt(i, 4));
 				String whomReceived = (String) table.getValueAt(i, 5);
 				String whoGive = (String) table.getValueAt(i, 6);
 				String expirationTime = (String) table.getValueAt(i, 7);
@@ -403,18 +417,38 @@ public class DrugOrderDialog extends JDialog {
 				ps.setString(3, drugCateg);
 				ps.setDouble(4, unitPrice);
 				ps.setInt(5, qttyIssued);
-				ps.setString(6, whomReceived);
-				ps.setString(7, whoGive);
-				ps.setString(8, expirationTime);
-				ps.setString(9, biz_date);
+				ps.setInt(6, soldQtty);
+				ps.setString(7, whomReceived);
+				ps.setString(8, whoGive);
+				ps.setString(9, expirationTime);
+				ps.setString(10, biz_date);
+				//---------------------------------------------------------
+				
+				ps2 = St_MaryConnection.getConnection().prepareStatement(insertQryRemove);
+				ps2.setInt(1, drugOrderId);
+				ps2.setString(2, drugName);
+				ps2.setString(3, drugCateg);
+				ps2.setDouble(4, unitPrice);
+				ps2.setInt(5, qttyIssued);
+				ps2.setInt(6, soldQtty);
+				ps2.setString(7, whomReceived);
+				ps2.setString(8, whoGive);
+				ps2.setString(9, expirationTime);
+				ps2.setString(10, biz_date);
+				
+				
 				// updating drug inventory table now
 				pre = St_MaryConnection.getConnection().prepareStatement(updateQry);
 				pre.setInt(1, qttyIssued);
-
 				pre.setString(2, drugName);
-				ps.execute();
+				pre.setInt(3, drugOrderId);
+				
 				pre.executeUpdate();
+				ps2.execute();
+				ps.execute();
+				
 
+				
 			}
 			getAllInventoryDrugs();// refresh table
 
@@ -423,16 +457,27 @@ public class DrugOrderDialog extends JDialog {
 
 		} catch (SQLException ex) {
 			System.out.println("Counter requesting drug error\n" + ex);
+			ex.printStackTrace();
 		}
 	}
 
-	// Focus Listeer for input field
+	// Focus Listener for input field
 	private class QttyIsBelowListener implements FocusListener {
 
 		@Override
 		public void focusGained(FocusEvent arg0) {
-			// TODO Auto-generated method stub
 
+			
+			checkDrugNameOnJtable();
+				
+				//model.removeRow(model.getRowCount()-1);
+			
+			// Check for existing drug in the order table and prevent same drug addition
+
+			avoidSameDrugsOrderTable(drugDescriptionField.getText());
+			
+				
+			
 		}
 
 		@Override
@@ -454,11 +499,12 @@ public class DrugOrderDialog extends JDialog {
 
 	}
 
-	// Notidcation when the re-order qtty is equal or below the level
+	// Notification when the re-order qtty is equal or below the level
 
 	private void alertForOrderLevelQtty(String drugNam, String expirationTime) {
 
-		String qry = "Select Re_Order_Qtty, quantity From drug_inventory where Description=? " + "AND expiryDate=?";
+		String qry = "Select Re_Order_Qtty, quantity From drug_inventory "
+				+ "where Description=? " + "AND expiryDate=?";
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		int qttyAlert = 0;
@@ -491,7 +537,13 @@ public class DrugOrderDialog extends JDialog {
 
 	private void getAllInventoryDrugs() {
 
-		String qry = "Select * From drug_inventory";
+		SimpleDateFormat dFormat = new SimpleDateFormat("yyyy-MM-01");
+		Date dNow = new Date();
+		String todayDate = dFormat.format(dNow.getTime());
+		//
+		String qry = "Select DISTINCT description, category, class, batchNo, voucherNo, supplier,"
+				+ "expiryDate, invDate, Re_Order_Qtty, quantity,inventory_id, sellingPrice"
+				+ " From drug_inventory where expiryDate > ? and quantity>0";
 		String dDescribe1 = "", dCat1 = "", dClass1 = "", batchNo1 = null, voucherNo1 = null, supplier1 = null,
 				expireDate1 = null, invDate1 = null;
 		int orderQtty1 = 0, reOrderQtty1 = 0;
@@ -499,6 +551,7 @@ public class DrugOrderDialog extends JDialog {
 		double unitPrice1 = 0;
 		try {
 			PreparedStatement ps = St_MaryConnection.getConnection().prepareStatement(qry);
+			ps.setString(1, todayDate);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
 
@@ -617,6 +670,8 @@ public class DrugOrderDialog extends JDialog {
 		}
 	}
 
+	//-------------------------------------------------------------------------------------
+
 	// who issued
 	private void who_to_Issued() {
 
@@ -631,6 +686,96 @@ public class DrugOrderDialog extends JDialog {
 			}
 		} catch (SQLException ex) {
 			System.out.println("Error in setting drug whom_Recieved on combo box" + ex);
+		}
+	}
+
+	//-------------------------------------------------------------------------------------
+	// This function prevent duplicate of drugs in order table
+	private void avoidSameDrugsOrderTable(String textFielddrugName) {
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		int soldQtty=0;
+		try {
+			ps = St_MaryConnection.getConnection()
+					.prepareStatement("" + "Select * from counterdrugordertableremove" + " where drugNameorder=? ");
+			ps.setString(1, textFielddrugName);
+
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				drugN = rs.getString("drugNameorder");
+				soldQtty = rs.getInt("sold_qtty");
+				qty = rs.getInt("quantityDemanded");
+
+
+			}
+			if (drugN!= null && drugN.equals(textFielddrugName.toString())&&soldQtty<qty) {
+
+				JOptionPane.showMessageDialog(null, "You cannot add this drug to"
+						+ " the order table because\n [" + qty
+						+ "]  unsold quantity still remaining.");
+				
+				model.setRowCount(0);//clear table
+				
+				//
+				inputField[0].setText(null);
+				inputField[1].setText(null);
+				drugDescriptionField.setText(null);
+			}
+
+		} catch (SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	// This function check the order drug list table if drug already added to the table
+	
+	private void checkDrugNameOnJtable() {
+		
+		for(int i=0;i<table.getRowCount();i++) {
+			
+			String drugName2 = (String) table.getValueAt(i, 1);
+			if(drugName2.equals(drugDescriptionField.getText())) {
+
+				JOptionPane.showMessageDialog(null, "You have already added the selected drug.\n"
+						+ "You can remove it and modify...");
+				
+				inputField[0].setText(null);
+				inputField[1].setText(null);
+				drugDescriptionField.setText(null);
+
+			}
+		}
+		
+	}
+	
+	//
+	// Compare quantity on the table and the entered amount
+	
+	private void avoidHighQttFromLowDrug() {
+
+		
+		//
+		String qry = "Select quantity  from drug_inventory where inventory_id=?";
+		int orderQtty1 = 0;
+		
+		try {
+			PreparedStatement ps = St_MaryConnection.getConnection().prepareStatement(qry);
+			ps.setInt(1, Integer.parseInt(drugIdNo));
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+
+				orderQtty1 = rs.getInt("quantity");
+			}
+			if(Integer.parseInt(inputField[1].getText())>orderQtty1) {
+				
+//				JOptionPane.showMessageDialog(null, "Amount of quantity entered is more than the total inventory");
+//				inputField[1].setText("");
+				model.setRowCount(model.getRowCount()-1);
+//				System.out.println(model.getRowCount()-1);
+				
+			}
+		} catch (SQLException ex) {
+			System.out.println("Getting all drug details errror\n" + ex);
 		}
 	}
 }

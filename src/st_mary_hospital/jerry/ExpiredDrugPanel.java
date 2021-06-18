@@ -36,6 +36,10 @@ import javax.swing.table.TableRowSorter;
 
 public class ExpiredDrugPanel extends JDialog {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JTable table;
 	public static DefaultTableModel drugexpireModel;
 	private JTextField searchField;

@@ -106,7 +106,7 @@ public class InnerDrugStore extends JPanel {
 			inputLabel[i] = new JLabel();
 			inputLabel[i].setFont(new Font("David", 1, 14));
 			inputField[i].setFont(new Font("David", 1, 14));
-			inputField[i].setBorder(new LineBorder(Color.GRAY, 1));
+			inputField[i].setBorder(new LineBorder(Color.BLACK, 1));
 			inputField[i].setPreferredSize(new Dimension(250, 30));
 			inputLabel[i].setPreferredSize(new Dimension(200, 30));
 			inputLabel[i].setBorder(new LineBorder(Color.GRAY, 1));
@@ -123,7 +123,7 @@ public class InnerDrugStore extends JPanel {
 
 		//
 		discribeDrugField = new JTextField();
-		discribeDrugField.setBorder(new LineBorder(Color.GRAY, 1));
+		discribeDrugField.setBorder(new LineBorder(Color.BLACK, 1));
 		discribeDrugField.setFont(new Font("David", 1, 14));
 		JLabel discribeLabel = new JLabel("Description:");
 		discribeLabel.setBorder(new LineBorder(Color.GRAY, 1));
@@ -139,14 +139,14 @@ public class InnerDrugStore extends JPanel {
 		classBox = new JComboBox<String>(drugClass);
 		classBox.setFont(new Font("David", 1, 16));
 		classBox.setForeground(Color.BLACK);
-		classBox.setBorder(new LineBorder(Color.GRAY, 1));
+		classBox.setBorder(new LineBorder(Color.BLACK, 1));
 		classBox.setEditable(true);
 		AutoCompleteDecorator.decorate(classBox);
 		centerPanel2.add(classLabel);
 		centerPanel2.add(classBox);
 		//
 		strengthField = new JTextField();
-		strengthField.setBorder(new LineBorder(Color.GRAY, 1));
+		strengthField.setBorder(new LineBorder(Color.BLACK, 1));
 		strengthField.setFont(new Font("David", 1, 14));
 		JLabel strengthLabel = new JLabel("Strength:");
 		strengthLabel.setBorder(new LineBorder(Color.GRAY, 1));
@@ -163,7 +163,7 @@ public class InnerDrugStore extends JPanel {
 		drugCat.setForeground(Color.BLACK);
 		catModel = new DefaultComboBoxModel<String>();
 		catBox = new JComboBox<String>(catModel);
-		catBox.setBorder(new LineBorder(Color.GRAY, 1));
+		catBox.setBorder(new LineBorder(Color.BLACK, 1));
 		catBox.setEditable(true);
 		AutoCompleteDecorator.decorate(catBox);
 		catBox.setFont(new Font("David", 1, 14));
@@ -175,7 +175,7 @@ public class InnerDrugStore extends JPanel {
 		unitModel = new DefaultComboBoxModel<>();
 		unitBox = new JComboBox<String>(unitModel);
 		unitBox.setFont(new Font("David", 1, 14));
-		unitBox.setBorder(new LineBorder(Color.GRAY, 1));
+		unitBox.setBorder(new LineBorder(Color.BLACK, 1));
 		unitBox.setEditable(true);
 		AutoCompleteDecorator.decorate(unitBox);
 		JLabel drugUnitLabel = new JLabel("Unit:");
@@ -193,7 +193,7 @@ public class InnerDrugStore extends JPanel {
 		locationModel = new DefaultComboBoxModel<>();
 		locationBox = new JComboBox<String>(locationModel);
 		locationBox.setFont(new Font("David", 1, 14));
-		locationBox.setBorder(new LineBorder(Color.GRAY, 1));
+		locationBox.setBorder(new LineBorder(Color.BLACK, 1));
 		locationBox.setEditable(true);
 		AutoCompleteDecorator.decorate(locationBox);
 		centerPanel1.add(locationLabel);
@@ -202,7 +202,7 @@ public class InnerDrugStore extends JPanel {
 
 		createDate = new JDateChooser();
 		createDate.setLocale(Locale.UK);
-		createDate.setBorder(new LineBorder(Color.GRAY, 1));
+		createDate.setBorder(new LineBorder(Color.BLACK, 1));
 		JLabel dateLabel = new JLabel(" Date:");
 		dateLabel.setAlignmentX(JLabel.RIGHT);
 
@@ -221,7 +221,7 @@ public class InnerDrugStore extends JPanel {
 		searchField = new JTextField();
 		searchField.setPreferredSize(new Dimension(250, 30));
 		searchField.setFont(new Font("David", 1, 16));
-		searchField.setBorder(new LineBorder(Color.GRAY));
+		searchField.setBorder(new LineBorder(Color.BLACK));
 		searchField.addKeyListener(new ItemSearchListener());
 		JLabel searchLabel = new JLabel("Search:");
 		searchLabel.setBorder(new LineBorder(Color.GRAY));

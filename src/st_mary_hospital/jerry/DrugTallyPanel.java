@@ -52,6 +52,10 @@ import net.proteanit.sql.DbUtils;
 
 public class DrugTallyPanel extends JPanel {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JLabel[] inputLabel = new JLabel[12];
 	private JTable table, table2;
 	private DefaultTableModel model, model2;
@@ -199,11 +203,12 @@ public class DrugTallyPanel extends JPanel {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		String qry2 = "SELECT  counterdrugordertable.orderDate, "
-				+ "counterdrugordertable.to_whom_issued, counterdrugordertable.whom_Recieved,"
-				+ "counterdrugordertable.quantityDemanded, "
-				+ "unitPrice from counterdrugordertable where drugNameOrder =? AND "
-				+ "expiryDate =? ORDER BY counterdrugordertable.orderDate asc";
+		String qry2 = "SELECT  counterdrugordertableRemove.orderDate, "
+				+ "counterdrugordertableRemove.to_whom_issued, "
+				+ "counterdrugordertableRemove.whom_Recieved,"
+				+ "counterdrugordertableRemove.quantityDemanded, "
+				+ "unitPrice from counterdrugordertableRemove where drugNameOrder =? AND "
+				+ "expiryDate =? ORDER BY counterdrugordertableRemove.orderDate asc";
 		int issueQttyDemanded = 0;
 		try {
 			ps = St_MaryConnection.getConnection().prepareStatement(qry2);
@@ -233,7 +238,7 @@ public class DrugTallyPanel extends JPanel {
 	public static void allDrugList() {
 		try {
 			PreparedStatement ps = St_MaryConnection.getConnection()
-					.prepareStatement("Select Distinct drugNameOrder" + " From" + " counterdrugordertable");
+					.prepareStatement("Select Distinct drugNameOrder" + " From" + " counterdrugordertableRemove");
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
 				String drugDescription = rs.getString("drugNameOrder");
@@ -250,7 +255,7 @@ public class DrugTallyPanel extends JPanel {
 	private void allExpiryDateList(String drugs) {
 		try {
 			PreparedStatement ps = St_MaryConnection.getConnection().prepareStatement(
-					"Select Distinct " + "expiryDate From" + " counterdrugordertable" + " where drugNameOrder=?");
+					"Select Distinct " + "expiryDate From" + " counterdrugordertableRemove" + " where drugNameOrder=?");
 			ps.setString(1, drugs);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
@@ -312,7 +317,7 @@ public class DrugTallyPanel extends JPanel {
 		String qry = "Select quantity, batchNo, voucherNo, Re_Order_Qtty,category From drug_inventory where expiryDate=? and"
 				+ " description=?";
 
-		String qry2 = "SELECT SUM(quantityDemanded) as quantitd from counterdrugordertable "
+		String qry2 = "SELECT SUM(quantityDemanded) as quantitd from counterdrugordertableRemove "
 				+ "where expiryDate=? AND drugNameOrder =?";
 
 		try {

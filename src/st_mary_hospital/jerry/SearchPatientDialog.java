@@ -29,11 +29,15 @@ import javax.swing.table.TableRowSorter;
 
 public class SearchPatientDialog extends JDialog {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JTextField qryfield;
-	public  static JTable PatientTable;
+	public static JTable PatientTable;
 	private DefaultTableModel model;
 	private TableRowSorter<DefaultTableModel> sorter;
-	private JButton printB;
+	private JButton printB, filterB;
 
 	public SearchPatientDialog() {
 		setSize(new Dimension(1100, 600));
@@ -58,8 +62,10 @@ public class SearchPatientDialog extends JDialog {
 		//
 		qryfield = new JTextField();
 		qryfield.addKeyListener(new ItemSorterListener());
-		
 
+		//
+		filterB = new JButton("Filter/Refresh");
+		filterB.addActionListener(new FliterListener());
 		qryfield.setForeground(new Color(0, 0, 0));
 		qryfield.setFont(new Font("David", 1, 16));
 		qryfield.setBorder(new LineBorder(new Color(204, 204, 204), 3));
@@ -70,9 +76,14 @@ public class SearchPatientDialog extends JDialog {
 		patientSearch.setForeground(new Color(0, 0, 0));
 		patientSearch.setFont(new Font("David", 1, 12));
 		//
+		filterB.setForeground(new Color(0, 0, 0));
+		filterB.setFont(new Font("David", 1, 16));
+		filterB.setBorder(new LineBorder(new Color(204, 204, 204), 3));
+		filterB.setPreferredSize(new Dimension(200, 40));
 
 		btnPanel.add(patientSearch);
 		btnPanel.add(qryfield);
+		btnPanel.add(filterB);
 
 		//
 
@@ -106,10 +117,10 @@ public class SearchPatientDialog extends JDialog {
 		southPanel.setBackground(Color.GRAY);
 		//
 		printB = new JButton("Print");
-		//printB.setBackground(Color.GRAY);
+		// printB.setBackground(Color.GRAY);
 		printB.setForeground(Color.BLACK);
 		printB.addActionListener(new PrintDialogDisplay());
-		
+
 		southPanel.add(printB);
 		southPanel.add(exitB);
 		add(southPanel, BorderLayout.SOUTH);
@@ -168,9 +179,10 @@ public class SearchPatientDialog extends JDialog {
 		@Override
 		public void keyReleased(KeyEvent arg0) {
 
-			sorter = new TableRowSorter<DefaultTableModel>(model);
-			PatientTable.setRowSorter(sorter);
-			sorter.setRowFilter(RowFilter.regexFilter(qryfield.getText().trim().toString().toUpperCase()));
+//			sorter = new TableRowSorter<DefaultTableModel>(model);
+//			PatientTable.setRowSorter(sorter);
+//			sorter.setRowFilter(RowFilter.regexFilter(qryfield.getText().trim().toString().toUpperCase()));
+			//fetchPatient();
 		}
 
 		@Override
@@ -179,17 +191,65 @@ public class SearchPatientDialog extends JDialog {
 		}
 
 	}
+
 	// display the print dialog
-	private class PrintDialogDisplay implements ActionListener{
+	private class PrintDialogDisplay implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			
+
 			PrintingDialog pd = new PrintingDialog();
 			pd.setVisible(true);
-			
-			
+
 		}
-		
+
+	}
+
+//	Filter patient name
+	private void fetchPatient() {
+
+		/*
+		 * this method handle patient data selection from db and set on table
+		 */
+		String inputQuery = qryfield.getText().toString().toUpperCase();
+		String splitS = inputQuery.replaceAll("\\s+", "");
+
+		try {
+			PreparedStatement ps = St_MaryConnection.getConnection()
+					.prepareStatement("Select *  From patient_register WHERE "
+							+ "CONCAT(surname, other_name, occupation, address, phone_no) LIKE ?");
+
+			ps.setString(1, "%" + splitS + "%");
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				String p_Id = rs.getString("patient_id");
+				String surName = rs.getString("surname");
+				String otherName = rs.getString("other_name");
+				String occupation = rs.getString("occupation");
+				int age = rs.getInt("age");
+				String gender = rs.getString("gender");
+				String phone = rs.getString("phone_no");
+				String address = rs.getString("address");
+				String regDate = rs.getString("reg_date");
+
+				model.addRow(new String[] { p_Id, surName, otherName, occupation, "" + age, gender, phone, address,
+						regDate });
+
+			}
+		} catch (SQLException ex) {
+			System.out.println("Selecting all patient id from it table error 2");
+			ex.printStackTrace();
+		}
+	}
+
+	// Patient filter listener class
+	private class FliterListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			model.setRowCount(0);
+			fetchPatient();
+		}
+
 	}
 }
